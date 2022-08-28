@@ -284,7 +284,7 @@ bool Instance::createfromFile(const string &file_name) {
   unsigned int nVars, nCls;
   int lit;
   unsigned max_ignore = 1000000;
-  unsigned clauses_added = 0;
+  unsigned clauses_in_cnf = 0;
   LiteralID llit;
   vector<LiteralID> literals;
   string idstring;
@@ -328,9 +328,14 @@ bool Instance::createfromFile(const string &file_name) {
   literals_.clear();
   literals_.resize(nVars + 1);
 
-  while ((input_file >> c) && clauses_added < nCls) {
+  while ((input_file >> c)) {
     input_file.unget(); //extracted a nonspace character to determine if we have a clause, so put it back
     if ((c == '-') || isdigit(c)) {
+      clauses_in_cnf++;
+      if (nCls < clauses_in_cnf) {
+        cout << "c ERROR! CNF has more clauses than the header promised!" << endl;
+        exit(-1);
+      }
       literals.clear();
       bool skip_clause = false;
       while ((input_file >> lit) && lit != 0) {
@@ -344,6 +349,11 @@ bool Instance::createfromFile(const string &file_name) {
             skip_clause = true;
             break;
           }
+          if (abs(i.toInt()) >= nVars) {
+            cout << "c ERROR! CNF has more variables than the header promised! Header said vars: "
+            << nVars << " but literal " << i.toInt() << " found" << endl;
+            exit(-1);
+          }
         }
         if (!duplicate_literal) {
           literals.push_back(lit);
@@ -351,7 +361,6 @@ bool Instance::createfromFile(const string &file_name) {
       }
       if (!skip_clause) {
         assert(!literals.empty());
-        clauses_added++;
         statistics_.incorporateClauseData(literals);
         ClauseOfs cl_ofs = addClause(literals);
         if (literals.size() >= 3)
@@ -361,6 +370,12 @@ bool Instance::createfromFile(const string &file_name) {
     }
     input_file.ignore(max_ignore, '\n');
   }
+  if (nCls != clauses_in_cnf) {
+      cout << "c ERROR! CNF has different number of clauses than the header promised!" << endl;
+      cout << "c header promised: " << nCls << " but there were: " << clauses_in_cnf << endl;
+      exit(-1);
+    }
+
   ///END NEW
   input_file.close();
   //  /// END FILE input
