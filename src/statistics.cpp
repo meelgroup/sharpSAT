@@ -13,7 +13,7 @@
 using namespace std;
 
 void DataAndStatistics::print_final_solution_count() {
-  cout << final_solution_count_.get_str();
+  cout << "s mc " << final_solution_count_.get_str();
 }
 
 void DataAndStatistics::writeToFile(const string & file_name) {
