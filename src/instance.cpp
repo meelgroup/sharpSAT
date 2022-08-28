@@ -349,7 +349,7 @@ bool Instance::createfromFile(const string &file_name) {
             skip_clause = true;
             break;
           }
-          if (abs(i.toInt()) >= nVars) {
+          if (abs(i.toInt()) > nVars) {
             cout << "c ERROR! CNF has more variables than the header promised! Header said vars: "
             << nVars << " but literal " << i.toInt() << " found" << endl;
             exit(-1);
